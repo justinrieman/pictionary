@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="styles.css" />
+    
+    <script
+      src="https://kit.fontawesome.com/5efbf3ceb6.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/> <!-- 'classic' theme -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="center-section">
+        <div class="leftside">
+          <div class="title users-title">
+            <h2>Users <i class="fas fa-users"></i></h2>
+           
+          </div>
+
+          <div class="users">
+            
+          </div>
+          
+        </div>
+        <div class="middle">
+          <div class="selection">
+            <div class="word">
+              <h1 class="random-word">Your Word</h1>
+            </div>
+            <div class="menu-toggle">
+              <i class="fas fa-bars"></i>
+              <i class="fas fa-times"></i>
+            </div>
+
+            <div class="selection-section">
+              <div class="colors">
+                <div class="color pickr"></div>
+                
+                <div id='eraser' class="color black"><i class="fa fa-eraser"></i></div>
+              </div>
+              <div class="sizes">
+                <div class="size small active-size">0</div>
+                <div class="size medium">0</div>
+                <div class="size large">0</div>
+              </div>
+            </div>
+          </div>
+          <canvas id="canvas" width="700" height="490"> </canvas>
+          <div class="footer">
+            <form class="guess-form" action="">
+              <input id="msg" type="text" class="guess-input" autocomplete="off"></input>
+              <button type="submit" class="guess-btn"><i class="far fa-paper-plane"></i></button>
+            </form>
+          </div>
+        </div>
+        <div class="rightside">
+          <div class="title chat-title">
+            <h2>Chat <i class="fas fa-comments"></i></h2>
+          </div>
+          <div class="chat-container">
+  
+          
+           
+        </div>
+      </div>
+    </div>
+
+    <!-- Pop-up form -->
+    <div class="nickname-container">
+      <form class="nickname-form" action="">
+        <h2>Enter Nickname</h2>
+        <input id="nickname" type="text" class="nickname-input" maxlength="15" autocomplete="off">
+        <button class="nickname-btn" type="submit">Enter</button>
+      </form>
+    </div>
+    
+
+    
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="canvas.js"></script>
+  </body>
+</html>
