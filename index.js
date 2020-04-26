@@ -19,6 +19,7 @@ io.on('connection', (socket) => {
 
   // Broadcast new user to all sockets but the one whos joining
   socket.on('new user', (name) => {
+    // Save all users in users object
     socket.nickname = name;
     let obj = {};
     if (users.length === 0) {
@@ -39,11 +40,10 @@ io.on('connection', (socket) => {
       users.push(obj);
     }
 
+    updateUsers();
+
     socket.broadcast.emit('new user', `${name} has joined the game!`);
     socket.emit('welcome', `Welcome ${name}!`);
-
-    console.log(users);
-    updateUsers();
   });
 
   // Send message to all clients
@@ -51,9 +51,30 @@ io.on('connection', (socket) => {
     io.emit('chat message', { msg: msg, name: socket.nickname });
   });
 
+  socket.on('random word', (randomWord) => {
+    console.log(randomWord);
+    io.emit('random word', randomWord);
+  });
+
   // Send drawing to all clients not drawing
   socket.on('drawing', (data) => {
     socket.broadcast.emit('drawing', data);
+  });
+
+  socket.on('winner', (winner) => {
+    // Remove isTurn from drawer
+    // Give isTurn to winner
+    users.forEach((user) => {
+      if (user.id === winner.id) {
+        user.isTurn = true;
+      } else {
+        user.isTurn = false;
+      }
+    });
+
+    updateUsers();
+
+    io.emit('winner', winner);
   });
 
   // Handle user disconnect
@@ -62,8 +83,6 @@ io.on('connection', (socket) => {
 
     // Remove disconnect user from users array
     users = users.filter((e) => e.name !== socket.nickname);
-
-    console.log(users);
 
     updateUsers();
   });

@@ -14,6 +14,8 @@ let isDrawing = false;
 let color = 'rgb(100,200,150)';
 let thickness = 7;
 let players = [];
+let currentPlayer, randomWord;
+const words = ['dog', 'cat', 'coffee mug', 'snow globe'];
 
 ///////////// Event Listeners /////////////
 
@@ -67,6 +69,11 @@ form.addEventListener('submit', function (e) {
 
   socket.emit('chat message', msg);
 
+  if (msg.includes(randomWord)) {
+    let winner = players.filter((e) => e.id === socket.id);
+    socket.emit('winner', winner[0]);
+  }
+
   e.target.elements.msg.value = '';
   e.target.elements.msg.focus();
 });
@@ -75,8 +82,6 @@ const chatContainer = document.querySelector('.chat-container');
 
 socket.on('chat message', function (data) {
   displayChat(data.msg, data.name);
-
-  chatContainer.scrollTop = chatContainer.scrollHeight;
 });
 
 function displayChat(message, name) {
@@ -94,6 +99,8 @@ function displayChat(message, name) {
   chatContainer.appendChild(div);
   div.appendChild(user);
   div.appendChild(text);
+
+  chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 ///////////// Functions /////////////
@@ -109,21 +116,23 @@ function endPosition() {
 
 function draw(e) {
   if (!isDrawing) return;
-  c.lineWidth = thickness;
-  c.lineCap = 'round';
-  c.strokeStyle = color;
-  c.beginPath();
-  c.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
-  c.stroke();
-  c.beginPath();
-  c.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+  if (socket.id === currentPlayer[0].id) {
+    c.lineWidth = thickness;
+    c.lineCap = 'round';
+    c.strokeStyle = color;
+    c.beginPath();
+    c.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
 
-  socket.emit('drawing', {
-    x: e.clientX,
-    y: e.clientY,
-    w: thickness,
-    co: color,
-  });
+    socket.emit('drawing', {
+      x: e.clientX,
+      y: e.clientY,
+      w: thickness,
+      co: color,
+    });
+  }
 }
 
 socket.on('drawing', (data) => {
@@ -204,12 +213,24 @@ socket.on('new user', (name) => {
 
 socket.on('welcome', (name) => {
   displayChat(name, 'Friendly Bot');
+  getRandomWord();
 });
 
+socket.on('random word', (word) => {
+  randomWord = word;
+});
 // Update the user section when someone leaves or joins
 
 socket.on('update users', (users) => {
   updateUsers(users);
+});
+
+socket.on('winner', (winner) => {
+  displayChat(
+    `${winner.name} has guessed correctly! Their turn to draw!`,
+    'Friendly Bot'
+  );
+  getRandomWord();
 });
 
 // Display Chat to everyone when someone leaves
@@ -221,7 +242,9 @@ socket.on('user left', (msg) => {
 // display users in the user section
 
 function updateUsers(users) {
-  console.log(users);
+  players = users;
+
+  currentPlayer = players.filter((e) => e.isTurn === true);
   const div = document.querySelector('.users');
   div.innerHTML = '';
   users.forEach((user) => {
@@ -238,7 +261,12 @@ function updateUsers(users) {
 
 function getRandomWord() {
   const display = document.querySelector('.random-word');
-  const words = ['dog', 'cat', 'coffee mug', 'snow globe'];
-  let word = words[Math.floor(Math.random() * words.length)];
-  display.innerHTML = word;
+
+  if (socket.id === currentPlayer[0].id) {
+    randomWord = words[Math.floor(Math.random() * words.length)];
+    display.innerHTML = randomWord;
+    socket.emit('random word', randomWord);
+  } else {
+    display.innerHTML = 'Guess the Word';
+  }
 }
