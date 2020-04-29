@@ -1,23 +1,88 @@
+///////////// Variables /////////////
+
 const canvas = document.getElementById('canvas');
 const c = canvas.getContext('2d');
+
+// Color/size options
 
 const menuToggle = document.querySelector('.menu-toggle');
 const selection = document.querySelector('.selection');
 const eraser = document.getElementById('eraser');
+const small = document.querySelector('.small');
+const medium = document.querySelector('.medium');
+const large = document.querySelector('.large');
+
+// Drawing stuff
+let isDrawing = false;
+let color = 'rgb(100,200,150)';
+let thickness = 7;
+
+// Chat stuff
+const form = document.querySelector('.guess-form');
+const input = document.querySelector('.guess-input');
+const chatContainer = document.querySelector('.chat-container');
+
+// Gameplay stuff
+let players = [];
+let currentPlayer, randomWord;
+const words = [
+  'Angel',
+  'Eyeball',
+  'Pizza',
+  'Angry',
+  'Fireworks',
+  'Pumpkin',
+  'Baby',
+  'Flower',
+  'Beard',
+  'Rainbow',
+  'Flying saucer',
+  'Recycle',
+  'Bible',
+  'Giraffe',
+  'Sand castle',
+  'Bikini',
+  'Glasses',
+  'Snowflake',
+  'Book',
+  'High heel',
+  'Stairs',
+  'Bucket',
+  'Ice cream cone',
+  'Starfish',
+  'Bumble bee',
+  'Igloo',
+  'Strawberry',
+  'Butterfly',
+  'Lady bug',
+  'Sun',
+  'Camera',
+  'Lamp',
+  'Tire',
+  'Cat',
+  'Lion',
+  'Toast',
+  'Church',
+  'Mailbox',
+  'Toothbrush',
+  'Crayon',
+  'Night',
+  'Toothpaste',
+  'Dolphin',
+  'Nose',
+  'Truck',
+  'Egg',
+  'Olympics',
+  'Volleyball',
+  'Eiffel Tower',
+  'Peanut',
+];
+
+///////////// Event Listeners /////////////
 
 menuToggle.addEventListener('click', function () {
   selection.classList.toggle('open');
 });
-///////////// Variables /////////////
-
-let isDrawing = false;
-let color = 'rgb(100,200,150)';
-let thickness = 7;
-let players = [];
-let currentPlayer, randomWord;
-const words = ['dog', 'cat', 'coffee mug', 'snow globe'];
-
-///////////// Event Listeners /////////////
 
 canvas.addEventListener('mousedown', startPosition);
 canvas.addEventListener('mouseup', endPosition);
@@ -30,10 +95,7 @@ eraser.addEventListener('click', function () {
 });
 
 // Change thickness
-// Couldn't get size from iterating over node list like the colors
-const small = document.querySelector('.small');
-const medium = document.querySelector('.medium');
-const large = document.querySelector('.large');
+// Couldn't get size from iterating over node list
 
 small.addEventListener('click', function () {
   thickness = 7;
@@ -60,16 +122,13 @@ large.addEventListener('click', function () {
 
 const socket = io();
 
-const form = document.querySelector('.guess-form');
-const input = document.querySelector('.guess-input');
-
 form.addEventListener('submit', function (e) {
   let msg = e.target.elements.msg.value;
   e.preventDefault();
 
   socket.emit('chat message', msg);
 
-  if (msg.includes(randomWord)) {
+  if (msg.toLowerCase().includes(randomWord.toLowerCase())) {
     let winner = players.filter((e) => e.id === socket.id);
     socket.emit('winner', winner[0]);
   }
@@ -77,8 +136,6 @@ form.addEventListener('submit', function (e) {
   e.target.elements.msg.value = '';
   e.target.elements.msg.focus();
 });
-
-const chatContainer = document.querySelector('.chat-container');
 
 socket.on('chat message', function (data) {
   displayChat(data.msg, data.name);
@@ -155,7 +212,7 @@ socket.on('drawing', (data) => {
 const pickr = Pickr.create({
   el: '.pickr',
   theme: 'classic', // or 'monolith', or 'nano'
-  default: 'white',
+  default: 'rgb(100,200,150)',
   swatches: ['red', 'orange', 'yellow', 'green', 'blue', 'purple'],
   comparison: false,
 
@@ -192,6 +249,7 @@ pickr.on('save', (c) => {
 
 // form to determine username
 const nicknameForm = document.querySelector('.nickname-form');
+const nicknameContainer = document.querySelector('.nickname-container');
 const nicknameInput = document.querySelector('.nickname-input');
 const nicknameBtn = document.querySelector('.nickname-btn');
 
@@ -200,7 +258,7 @@ const nicknameBtn = document.querySelector('.nickname-btn');
 nicknameForm.addEventListener('submit', function (e) {
   e.preventDefault();
   socket.emit('new user', e.target.elements.nickname.value);
-  nicknameForm.style.display = 'none';
+  nicknameContainer.style.display = 'none';
 });
 
 // Broadcast new user to all sockets but the one whos joining
@@ -230,6 +288,7 @@ socket.on('winner', (winner) => {
     `${winner.name} has guessed correctly! Their turn to draw!`,
     'Friendly Bot'
   );
+  c.clearRect(0, 0, canvas.width, canvas.height);
   getRandomWord();
 });
 
@@ -239,6 +298,14 @@ socket.on('user left', (msg) => {
   displayChat(msg, 'Friendly Bot');
 });
 
+socket.on('new drawer', ({ oldDrawer, newDrawer }) => {
+  displayChat(
+    `${oldDrawer.name} left the game. ${newDrawer.name} is now drawing!`,
+    'Friendly Bot'
+  );
+  console.log(newDrawer);
+  getRandomWord();
+});
 // display users in the user section
 
 function updateUsers(users) {
